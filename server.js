@@ -41,6 +41,11 @@ app.get("/splitwise/callback", async (req, res) => {
 
         accessToken = tokenResponse.data.access_token;
         refreshToken = tokenResponse.data.refresh_token;
+        console.log("Callback received with code:", code);
+        console.log("CLIENT_ID:", CLIENT_ID);
+        console.log("CLIENT_SECRET:", CLIENT_SECRET ? "Loaded" : "Missing");
+        console.log("REDIRECT_URI:", REDIRECT_URI);
+
 
         console.log("✔ Splitwise tokens saved!");
 
