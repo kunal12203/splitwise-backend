@@ -15,19 +15,18 @@ let refreshToken = null;
 
 // 1️⃣ OAuth Redirect Handler
 app.get("/splitwise/callback", async (req, res) => {
-    console.log("Callback hit with code:", req.query.code);
+    const code = req.query.code;
+
+    console.log("Callback hit with code:", code);
     console.log("CLIENT_ID:", CLIENT_ID);
     console.log("CLIENT_SECRET present:", CLIENT_SECRET ? "YES" : "NO");
     console.log("REDIRECT_URI:", REDIRECT_URI);
-
-    const code = req.query.code;
 
     if (!code) {
         return res.status(400).send("No code received.");
     }
 
     try {
-        // 2️⃣ Exchange code for tokens
         const tokenResponse = await axios.post(
             "https://secure.splitwise.com/oauth/token",
             new URLSearchParams({
@@ -46,14 +45,13 @@ app.get("/splitwise/callback", async (req, res) => {
 
         accessToken = tokenResponse.data.access_token;
         refreshToken = tokenResponse.data.refresh_token;
-       
 
-
-        console.log("✔ Splitwise tokens saved!");
+        console.log("✔ Splitwise tokens saved!", tokenResponse.data);
 
         return res.send("✔ Successfully connected to Splitwise! You may close this window.");
     } catch (error) {
-        console.error("OAuth Error:", error.response?.data || error.message);
+        console.error("OAuth Error status:", error.response?.status);
+        console.error("OAuth Error data:", error.response?.data);
         return res.status(500).send("OAuth error.");
     }
 });
