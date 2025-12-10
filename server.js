@@ -60,8 +60,8 @@ app.get("/splitwise/callback", async (req, res) => {
 app.get("/api/expenses", async (req, res) => {
     if (!accessToken) return res.status(401).json({ error: "Not authenticated" });
 
-    const since = req.query.since; // ISO8601 timestamp from iOS
-    
+    const since = req.query.since;
+
     try {
         const response = await axios.get(
             `https://secure.splitwise.com/api/v3.0/get_expenses?dated_after=${since}`,
@@ -70,12 +70,16 @@ app.get("/api/expenses", async (req, res) => {
             }
         );
 
+        console.log("Expenses returned:", response.data.expenses.length);
+        console.log(JSON.stringify(response.data.expenses, null, 2));
+
         return res.json(response.data);
     } catch (err) {
         console.error(err.response?.data || err.message);
         return res.status(500).send("Failed to fetch expenses");
     }
 });
+
 
 // Root route to prevent 404 on backend root
 app.get("/", (req, res) => {
