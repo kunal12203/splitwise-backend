@@ -56,6 +56,27 @@ app.get("/splitwise/callback", async (req, res) => {
     }
 });
 
+// 4️⃣ Get current Splitwise user
+app.get("/api/me", async (req, res) => {
+    if (!accessToken)
+        return res.status(401).json({ error: "Not authenticated" });
+
+    try {
+        const response = await axios.get(
+            "https://secure.splitwise.com/api/v3.0/get_current_user",
+            {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            }
+        );
+
+        console.log("Fetched current user:", response.data);
+        return res.json(response.data);
+    } catch (err) {
+        console.error("Get user error:", err.response?.data || err);
+        res.status(500).json({ error: "Failed to fetch user" });
+    }
+});
+
 // 3️⃣ API endpoint to get expenses (with date filter)
 app.get("/api/expenses", async (req, res) => {
     if (!accessToken) return res.status(401).json({ error: "Not authenticated" });
