@@ -4,21 +4,26 @@ import axios from "axios";
 const app = express();
 app.use(express.json());
 
+// Read from Render Environment Variables
 const CLIENT_ID = process.env.SPLITWISE_CLIENT_ID;
 const CLIENT_SECRET = process.env.SPLITWISE_CLIENT_SECRET;
 const REDIRECT_URI = process.env.SPLITWISE_REDIRECT_URI;
 
-// Store tokens in memory for now (later → DB)
+// Temporary in-memory token storage
 let accessToken = null;
 let refreshToken = null;
 
-// 1️⃣ Splitwise redirects here with ?code=
+// 1️⃣ OAuth Redirect Handler
 app.get("/splitwise/callback", async (req, res) => {
     const code = req.query.code;
 
+    if (!code) {
+        return res.status(400).send("No code received.");
+    }
+
     try {
         // 2️⃣ Exchange code for tokens
-        const response = await axios.post(
+        const tokenResponse = await axios.post(
             "https://secure.splitwise.com/oauth/token",
             new URLSearchParams({
                 grant_type: "authorization_code",
@@ -26,25 +31,31 @@ app.get("/splitwise/callback", async (req, res) => {
                 client_id: CLIENT_ID,
                 client_secret: CLIENT_SECRET,
                 redirect_uri: REDIRECT_URI
-            })
+            }),
+            {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            }
         );
 
-        accessToken = response.data.access_token;
-        refreshToken = response.data.refresh_token;
+        accessToken = tokenResponse.data.access_token;
+        refreshToken = tokenResponse.data.refresh_token;
 
-        console.log("Access Token Saved!");
+        console.log("✔ Splitwise tokens saved!");
 
-        // Redirect back to your iOS app
-        res.send("Success! Your Splitwise account is linked. You can close this page.");
-    } catch (err) {
-        console.error(err.response?.data || err.message);
-        res.status(500).send("OAuth Error");
+        return res.send("✔ Successfully connected to Splitwise! You may close this window.");
+    } catch (error) {
+        console.error("OAuth Error:", error.response?.data || error.message);
+        return res.status(500).send("OAuth error.");
     }
 });
 
-// 3️⃣ API endpoint for your iOS app
+// 3️⃣ API endpoint to get expenses (for your iOS app)
 app.get("/api/expenses", async (req, res) => {
-    if (!accessToken) return res.status(401).json({ error: "Not authenticated with Splitwise" });
+    if (!accessToken) {
+        return res.status(401).json({ error: "Not authenticated with Splitwise." });
+    }
 
     try {
         const response = await axios.get(
@@ -56,14 +67,15 @@ app.get("/api/expenses", async (req, res) => {
             }
         );
 
-        res.json(response.data);
-    } catch (err) {
-        console.error(err.response?.data || err.message);
-        res.status(500).send("Failed fetching expenses");
+        return res.json(response.data);
+    } catch (error) {
+        console.error("Expense Fetch Error:", error.response?.data || error.message);
+        return res.status(500).send("Failed to fetch expenses.");
     }
 });
 
-// 4️⃣ Start server
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
+// 4️⃣ Start server on Render's port
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Backend running on port ${PORT}`);
 });
