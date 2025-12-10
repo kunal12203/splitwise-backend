@@ -51,28 +51,43 @@ app.get("/splitwise/callback", async (req, res) => {
     }
 });
 
-// 3️⃣ API endpoint to get expenses (for your iOS app)
+// 3️⃣ API endpoint to get expenses (with date filter)
 app.get("/api/expenses", async (req, res) => {
-    if (!accessToken) {
-        return res.status(401).json({ error: "Not authenticated with Splitwise." });
-    }
+    if (!accessToken) return res.status(401).json({ error: "Not authenticated" });
 
+    const since = req.query.since; // ISO8601 timestamp from iOS
+    
     try {
         const response = await axios.get(
-            "https://secure.splitwise.com/api/v3.0/get_expenses",
+            `https://secure.splitwise.com/api/v3.0/get_expenses?dated_after=${since}`,
             {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                }
+                headers: { Authorization: `Bearer ${accessToken}` }
             }
         );
 
         return res.json(response.data);
-    } catch (error) {
-        console.error("Expense Fetch Error:", error.response?.data || error.message);
-        return res.status(500).send("Failed to fetch expenses.");
+    } catch (err) {
+        console.error(err.response?.data || err.message);
+        return res.status(500).send("Failed to fetch expenses");
     }
 });
+
+// Root route to prevent 404 on backend root
+app.get("/", (req, res) => {
+    res.send("Splitwise Backend is running!");
+});
+
+// Health check route for uptime monitors
+app.get("/health", (req, res) => {
+    res.json({
+        status: "ok",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
+
+
 
 // 4️⃣ Start server on Render's port
 const PORT = process.env.PORT || 3000;
