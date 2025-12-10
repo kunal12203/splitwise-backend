@@ -15,6 +15,11 @@ let refreshToken = null;
 
 // 1️⃣ OAuth Redirect Handler
 app.get("/splitwise/callback", async (req, res) => {
+    console.log("Callback hit with code:", req.query.code);
+    console.log("CLIENT_ID:", CLIENT_ID);
+    console.log("CLIENT_SECRET present:", CLIENT_SECRET ? "YES" : "NO");
+    console.log("REDIRECT_URI:", REDIRECT_URI);
+
     const code = req.query.code;
 
     if (!code) {
@@ -41,10 +46,7 @@ app.get("/splitwise/callback", async (req, res) => {
 
         accessToken = tokenResponse.data.access_token;
         refreshToken = tokenResponse.data.refresh_token;
-        console.log("Callback received with code:", code);
-        console.log("CLIENT_ID:", CLIENT_ID);
-        console.log("CLIENT_SECRET:", CLIENT_SECRET ? "Loaded" : "Missing");
-        console.log("REDIRECT_URI:", REDIRECT_URI);
+       
 
 
         console.log("✔ Splitwise tokens saved!");
