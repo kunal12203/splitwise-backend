@@ -120,7 +120,7 @@ app.get("/health", (req, res) => {
 
 
 // 4️⃣ Start server on Render's port
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Backend running on port ${PORT}`);
 });
